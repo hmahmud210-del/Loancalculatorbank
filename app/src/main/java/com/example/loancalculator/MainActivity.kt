@@ -5,10 +5,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -26,6 +27,7 @@ class MainActivity : ComponentActivity() {
 private fun num(s: String) = s.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 0.0
 private fun money(v: Double) = "৳ " + String.format(Locale.US, "%,.2f", v)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoanCalculatorScreen() {
     var category by remember { mutableStateOf("সরকারি চাকরিজীবী") }
@@ -95,8 +97,13 @@ fun LoanCalculatorScreen() {
         SectionTitle("১. গ্রাহকের তথ্য")
         var expanded by remember { mutableStateOf(false) }
         ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-            OutlinedTextField(value = category, onValueChange = {}, readOnly = true,
-                label = { Text("চাকরির ক্যাটাগরি") }, modifier = Modifier.menuAnchor().fillMaxWidth())
+            OutlinedTextField(
+                value = category,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("চাকরির ক্যাটাগরি") },
+                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth()
+            )
             ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 listOf("সরকারি চাকরিজীবী", "ব্যাংকার (নিজ ব্যাংক)", "ব্যাংকার (অন্য ব্যাংক)", "স্কুল শিক্ষক", "বেসরকারি চাকরিজীবী", "অন্যান্য").forEach {
                     DropdownMenuItem(text = { Text(it) }, onClick = { category = it; expanded = false })
@@ -112,7 +119,7 @@ fun LoanCalculatorScreen() {
             Box(Modifier.weight(1f)) { InputField("বেতনের কত গুণ", multiplier) { multiplier = it } }
             Box(Modifier.weight(1f)) { InputField("সর্বোচ্চ DBR (%)", dbr) { dbr = it } }
         }
-        InputField("বর্তমান মাসিক কিস্তি (৳)", existingEmi)
+        InputField("বর্তমান মাসিক কিস্তি (৳)", existingEmi) { existingEmi = it }
 
         SectionTitle("২. লোনের তথ্য")
         InputField("লোনের পরিমাণ (৳)", loan) { loan = it }
@@ -120,7 +127,7 @@ fun LoanCalculatorScreen() {
             Box(Modifier.weight(1f)) { InputField("বার্ষিক সুদ (%)", annualRate) { annualRate = it } }
             Box(Modifier.weight(1f)) { InputField("মেয়াদ (মাস)", months) { months = it } }
         }
-        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Flat সুদ পদ্ধতি", modifier = Modifier.weight(1f))
             Switch(checked = flat, onCheckedChange = { flat = it })
             Text(if (flat) "Flat" else "Reducing")
@@ -176,12 +183,14 @@ fun LoanCalculatorScreen() {
 private fun SectionTitle(title: String) {
     Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 }
+
 @Composable
 private fun InputField(label: String, value: String, onValue: (String) -> Unit) {
     OutlinedTextField(value = value, onValueChange = { onValue(it.filter { c -> c.isDigit() || c == '.' }) },
         label = { Text(label) }, modifier = Modifier.fillMaxWidth(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true)
 }
+
 @Composable
 private fun ResultRow(label: String, value: String) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
